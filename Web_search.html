@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Streaming-Check mit Poster</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #141414; color: white; padding: 20px; text-align: center; }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        /* Suchbereich */
+        .search-box { margin-bottom: 30px; }
+        input { padding: 12px; width: 60%; border-radius: 5px 0 0 5px; border: none; font-size: 16px; outline: none; }
+        button { padding: 12px 20px; cursor: pointer; background: #e50914; color: white; border: none; border-radius: 0 5px 5px 0; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #ff0a16; }
+
+        /* Film-Karte Layout */
+        .movie-card { 
+            margin-top: 30px; 
+            border: 1px solid #333; 
+            padding: 20px; 
+            display: none; 
+            background: #1f1f1f; 
+            border-radius: 10px; 
+            text-align: left; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .movie-content { display: flex; gap: 20px; flex-wrap: wrap; }
+        
+        #poster { 
+            width: 200px; 
+            border-radius: 8px; 
+            display: block; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            background-color: #333; /* Platzhalterfarbe */
+        }
+
+        .movie-info { flex: 1; min-width: 300px; }
+        
+        .provider-icon { width: 45px; margin-right: 8px; border-radius: 8px; margin-top: 10px; transition: transform 0.2s; }
+        .provider-icon:hover { transform: scale(1.1); }
+        
+        #description { color: #bbb; line-height: 1.6; font-size: 0.95em; }
+        h2 { margin-top: 0; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🎬 Movie & Stream Finder</h1>
+        <div class="search-box">
+            <input type="text" id="movieInput" placeholder="Film- oder Serientitel...">
+            <button onclick="searchMovie()">Suchen</button>
+        </div>
+                
+        <!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Streaming-Aggregator Multi-Search</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #141414; color: white; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; text-align: center; }
+        
+        .search-box { margin-bottom: 40px; }
+        input { padding: 15px; width: 60%; border-radius: 30px 0 0 30px; border: none; font-size: 16px; outline: none; background: #333; color: white; }
+        button { padding: 15px 30px; cursor: pointer; background: #e50914; color: white; border: none; border-radius: 0 30px 30px 0; font-weight: bold; }
+
+        /* Container für alle Ergebnisse */
+        #resultsGrid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 20px; 
+            text-align: left;
+        }
+
+        /* Einzelne Film-Karte */
+        .movie-card { 
+            background: #1f1f1f; 
+            border-radius: 15px; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column;
+            border: 1px solid #333;
+            transition: transform 0.2s;
+        }
+        .movie-card:hover { transform: scale(1.02); }
+
+        .poster-img { width: 100%; height: auto; background: #2a2a2a; }
+        
+        .info-padding { padding: 15px; flex-grow: 1; }
+        .movie-title { font-size: 1.2em; margin: 0 0 10px 0; color: #fff; }
+        .movie-desc { font-size: 0.85em; color: #bbb; height: 80px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
+        
+        .providers-list { margin-top: 15px; padding-top: 10px; border-top: 1px solid #333; }
+        .provider-icon { width: 35px; margin-right: 5px; border-radius: 5px; }
+        .type-badge { font-size: 0.7em; background: #444; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; margin-bottom: 5px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div id="resultsGrid"></div>
+    </div>
+
+    <script>
+        const MY_API_KEY = 'e170d021dfc1298bdbbbb51399c8b4f5'; 
+
+        async function searchMovie() {
+            const query = document.getElementById('movieInput').value;
+            if(!query) return;
+
+            const grid = document.getElementById('resultsGrid');
+            grid.innerHTML = "Lade Ergebnisse...";
+
+            try {
+                // "multi"-Suche findet Filme UND Serien gleichzeitig
+                const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${MY_API_KEY}&query=${encodeURIComponent(query)}&language=de-DE`);
+                const data = await res.json();
+                
+                grid.innerHTML = ''; // Lade-Text entfernen
+
+                // Wir gehen durch die ersten 10 Ergebnisse (Loop)
+                const topResults = data.results.slice(0, 10);
+
+                for (let item of topResults) {
+                    if (item.media_type === 'person') continue; // Schauspieler ignorieren
+
+                    // Karte erstellen
+                    const card = document.createElement('div');
+                    card.className = 'movie-card';
+
+                    // Titel (Serien heißen oft 'name', Filme 'title')
+                    const title = item.title || item.name;
+                    const poster = item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750?text=Kein+Bild';
+                    const type = item.media_type === 'tv' ? 'Serie' : 'Film';
+
+                    // Anbieter-Abfrage (muss für jedes Item separat gemacht werden)
+                    const providerRes = await fetch(`https://api.themoviedb.org/3/${item.media_type}/${item.id}/watch/providers?api_key=${MY_API_KEY}`);
+                    const providerData = await providerRes.json();
+                    const deProviders = providerData.results?.DE?.flatrate || [];
+
+                    let providerHtml = deProviders.length > 0 
+                        ? deProviders.map(p => `<img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="provider-icon" title="${p.provider_name}">`).join('')
+                        : '<span style="color:#666; font-size:0.8em;">Kein Abo gefunden</span>';
+
+                    card.innerHTML = `
+                        <img src="${poster}" class="poster-img">
+                        <div class="info-padding">
+                            <span class="type-badge">${type}</span>
+                            <h3 class="movie-title">${title}</h3>
+                            <p class="movie-desc">${item.overview || "Keine Beschreibung verfügbar."}</p>
+                            <div class="providers-list">
+                                <strong>Streaming:</strong><br>${providerHtml}
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                }
+            } catch (error) {
+                console.error("Fehler:", error);
+                grid.innerHTML = "Ein Fehler ist aufgetreten.";
+            }
+        }
+    </script>
+</body>
+</html>
