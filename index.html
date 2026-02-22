@@ -163,7 +163,20 @@
                 grid.innerHTML = "Ein Fehler ist aufgetreten.";
             }
         }
+
+            // Lauscht auf Tastendrücke im Eingabefeld
+        document.getElementById("movieInput").addEventListener("keypress", function(event) {
+                // Prüft, ob die gedrückte Taste "Enter" war (Key Code 13)
+            if (event.key === "Enter") {
+                // Verhindert Standard-Aktionen
+                event.preventDefault();
+                // Löst die Such-Funktion aus
+                    searchWithFuzzy();
+    }
+});
+        
     </script>
 </body>
 
 </html>
+
